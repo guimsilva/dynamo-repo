@@ -1,8 +1,12 @@
 {
   "name": "dynamo-repo",
   "version": "1.0.0",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/"
+  },
   "description": "Library to create type-safe and easier to use dynamodb repositories",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -15,6 +19,9 @@
   ],
   "author": "Guilherme De Mello E Silva",
   "license": "ISC",
+  "files": [
+    "dist"
+  ],
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.670.0",
     "@aws-sdk/lib-dynamodb": "^3.670.0",
