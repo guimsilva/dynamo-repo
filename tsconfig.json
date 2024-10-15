@@ -8,9 +8,16 @@
     "target": "es5",
     "strictNullChecks": false,
     "esModuleInterop": true,
-    "outDir": "dist",
+    "outDir": "./dist",
     "sourceMap": true,
     "declaration": true,
     "resolveJsonModule": true,
-  }
+  },
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
 }
