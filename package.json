@@ -13,7 +13,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "@guimsilva/dynamo-repo"
+    "url": "https://github.com/guimsilva/dynamo-repo"
   },
   "keywords": [
     "dynamo",
