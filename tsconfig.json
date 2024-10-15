@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "lib": [
+      "es6",
+      "dom",
+      "es2019"
+    ],
+    "target": "es5",
+    "strictNullChecks": false,
+    "esModuleInterop": true,
+    "outDir": "dist",
+    "sourceMap": true,
+    "declaration": true,
+    "resolveJsonModule": true,
+  }
+}
