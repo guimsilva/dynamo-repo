@@ -1,4 +1,4 @@
-# dynamots
+# dynamo-repo
 
 `dynamots` is a TypeScript library designed to create type-safe, consistent and easier-to-use DynamoDB repositories. It simplifies the interaction with DynamoDB by providing a repository pattern with type safety and handling of reserved words, among other features.
 
