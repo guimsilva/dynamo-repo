@@ -1,6 +1,6 @@
 # dynamo-repo
 
-`dynamots` is a TypeScript library designed to create type-safe, consistent and easier-to-use DynamoDB repositories. It simplifies the interaction with DynamoDB by providing a repository pattern with type safety and handling of reserved words, among other features.
+`dynamo-repo` is a TypeScript library designed to create type-safe, consistent and easier-to-use DynamoDB repositories. It simplifies the interaction with DynamoDB by providing a repository pattern with type safety and handling of reserved words, among other features.
 
 ## Features
 
@@ -12,7 +12,7 @@
 ## Installation
 
 ```sh
-npm install dynamots
+npm install dynamo-repo
 ```
 
 ### Getting Started
@@ -97,7 +97,7 @@ Add an item to the repository.
 const user = {
   id: "123",
   country: "Australia",
-  email: "user1@dynamots.ts",
+  email: "user1@dynamo.repo.ts",
   firstName: "John",
   surname: "Doe",
   birthYear: 1990,
