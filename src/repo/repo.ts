@@ -155,7 +155,7 @@ export class Repo<
   }
 
   async findItem(key: Record<P | S, T[P] | T[S]>) {
-    if (!key) return null;
+    if (!key) return undefined;
 
     const params: GetCommandInput = {
       TableName: this.tableName,
