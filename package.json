@@ -1,6 +1,6 @@
 {
   "name": "dynamo-repo",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
   },
@@ -26,8 +26,7 @@
   ],
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.670.0",
-    "@aws-sdk/lib-dynamodb": "^3.670.0",
-    "dynamo-repo": "^1.0.4"
+    "@aws-sdk/lib-dynamodb": "^3.670.0"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.25.8",
