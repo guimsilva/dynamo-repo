@@ -4,10 +4,19 @@
 
 ## Features
 
-- **Type Safety**: Ensures that your DynamoDB operations are type-safe.
-- **Consistency**: By overriding `upsertItemFn()`, your entity will be automatically validated and updated (index keys etc.) for every insertion or update.
-- **Reserved Words Handling**: Automatically handles DynamoDB reserved words.
-- **Ease of Use**: Simplifies common DynamoDB operations with a repository pattern.
+**Type Safety**: Ensures that all your DynamoDB operations are type-safe.
+
+![alt text](assets/add-user.png)
+
+![alt text](assets/find-user-1.png)
+
+![alt text](assets/find-user-2.png)
+
+**Consistency**: By overriding `upsertItemFn()`, your entity will be automatically validated and updated (index keys etc.) for every insertion or update.
+
+**Reserved Words Handling**: Automatically handles DynamoDB reserved words.
+
+**Ease of Use**: Simplifies common DynamoDB operations with a repository pattern.
 
 ## Installation
 
