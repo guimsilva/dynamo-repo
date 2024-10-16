@@ -44,6 +44,7 @@ describe("User repo", () => {
       await userRepo.addItem(user);
       await wait(0.1);
       const userResult1 = await userRepo.findItem({ id: user.id });
+      if (!userResult1) throw new Error("User not found");
       expect(userResult1.id).toEqual("1");
       expect(userResult1.firstName).toEqual("John");
       expect(userResult1.role).toEqual("user");
@@ -58,6 +59,7 @@ describe("User repo", () => {
       await userRepo.addItem(user);
       await wait(0.1);
       const userResult1 = await userRepo.findItem({ id: user.id });
+      if (!userResult1) throw new Error("User not found");
       expect(userResult1.id).toEqual("1");
       expect(userResult1.firstName).toEqual("John");
       expect(userResult1.role).toEqual("user");
@@ -73,6 +75,7 @@ describe("User repo", () => {
       );
       await wait(0.1);
       const userResult2 = await userRepo.findItem({ id: user.id });
+      if (!userResult2) throw new Error("User not found");
       expect(userResult2.firstName).toEqual("Mike");
       expect(userResult2.role).toEqual("admin");
       expect(userResult2.birthYearMonth).toEqual(199003);
@@ -86,6 +89,7 @@ describe("User repo", () => {
       await userRepo.addItem(user);
       await wait(0.1);
       const userResult1 = await userRepo.findItem({ id: user.id });
+      if (!userResult1) throw new Error("User not found");
       expect(userResult1.id).toEqual("1");
       expect(userResult1.firstName).toEqual("John");
       expect(userResult1.role).toEqual("user");
@@ -102,6 +106,7 @@ describe("User repo", () => {
       );
       await wait(0.1);
       const userResult2 = await userRepo.findItem({ id: user.id });
+      if (!userResult2) throw new Error("User not found");
       expect(userResult2.firstName).toEqual("Mike");
       expect(userResult2.role).toEqual("admin");
       expect(userResult2.birthYearMonth).toEqual(199003);
@@ -120,6 +125,7 @@ describe("User repo", () => {
       },
       "country-birth-index"
     );
+    if (!users) throw new Error("Users not found");
     expect(users.length).toEqual(1);
     expect(users[0].id).toEqual("1");
     expect(users[0].firstName).toEqual("John");
@@ -133,7 +139,7 @@ describe("User repo", () => {
       const userWithoutRequiredFields = {
         ...user,
         birthMonth: undefined
-      } as User;
+      } as unknown as User; /* Use `unknown` here to allow casting and force the type error */
 
       try {
         await userRepo.addItem(userWithoutRequiredFields);

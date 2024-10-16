@@ -123,7 +123,7 @@ Update an item simply passing the item object.
 
 ```
 await userRepo.updateItem(
-  { id: user.id },
+  { id: "123" },
   {
     ...user,
     firstName: "Mike",
@@ -136,7 +136,7 @@ Update an item using an expression.
 
 ```
 await userRepo.updateExpressionItem(
-  { id: user.id },
+  { id: "123" },
   "firstName = :firstName, role = :role",
   {
     firstName: "Mike",
