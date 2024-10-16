@@ -5,7 +5,7 @@
 ## Features
 
 - **Type Safety**: Ensures that your DynamoDB operations are type-safe.
-- **Consistency**: By setting a `upsertItemFn()` callback, your entity will be automatically validated and updated (index keys etc.) for every insertion or update.
+- **Consistency**: By overriding `upsertItemFn()`, your entity will be automatically validated and updated (index keys etc.) for every insertion or update.
 - **Reserved Words Handling**: Automatically handles DynamoDB reserved words.
 - **Ease of Use**: Simplifies common DynamoDB operations with a repository pattern.
 
@@ -54,7 +54,7 @@ export interface User extends DBItemBase {
 
 Create a repository class for your entity by extending the `Repo` class. This repository class will define the structure and operations for your DynamoDB table.
 
-Using `this.setUpsertItemFn()` is optional.
+Overriding `upsertItemFn()` is optional.
 
 ```
 export class UserRepo extends Repo<User, "id"> {
@@ -71,14 +71,15 @@ export class UserRepo extends Repo<User, "id"> {
       "role",
       "birthYearMonth"
     ]);
-    this.setUpsertItemFn((item) => {
-      if (item.birthYear === undefined || item.birthMonth === undefined) {
-        throw new Error(`User with id ${item.id} doesn't have all required fields`);
-      }
-      item.birthYearMonth = item.birthYear * 100 + item.birthMonth;
-      return item;
-    });
   }
+
+  override upsertItemFn = (item: Partial<User>) => {
+    if (item.birthYear === undefined || item.birthMonth === undefined) {
+      throw new Error(`User with id ${item.id} doesn't have all required fields`);
+    }
+    item.birthYearMonth = item.birthYear * 100 + item.birthMonth;
+    return item;
+  };
 }
 ```
 

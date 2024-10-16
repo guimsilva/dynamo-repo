@@ -33,12 +33,13 @@ export class UserRepo extends Repo<User, "id"> {
       "role",
       "birthYearMonth"
     ]);
-    this.setUpsertItemFn((item) => {
-      if (item.birthYear === undefined || item.birthMonth === undefined) {
-        throw new Error(`User with id ${item.id} doesn't have all required fields`);
-      }
-      item.birthYearMonth = item.birthYear * 100 + item.birthMonth;
-      return item;
-    });
   }
+
+  override upsertItemFn = (item: Partial<User>) => {
+    if (item.birthYear === undefined || item.birthMonth === undefined) {
+      throw new Error(`User with id ${item.id} doesn't have all required fields`);
+    }
+    item.birthYearMonth = item.birthYear * 100 + item.birthMonth;
+    return item;
+  };
 }

@@ -135,10 +135,6 @@ export class Repo<
     return result;
   }
 
-  protected setUpsertItemFn(callBackFn: (item: T) => T) {
-    this.upsertItemFn = callBackFn;
-  }
-
   protected getItemKeyValues(item: T) {
     return JSON.stringify(
       this.key.reduce(
