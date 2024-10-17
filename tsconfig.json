@@ -22,7 +22,6 @@
     "assets",
     "**/*.test.ts",
     "**/*.spec.ts",
-    "test",
-    "tests",
+    "**/tests",
   ]
 }
