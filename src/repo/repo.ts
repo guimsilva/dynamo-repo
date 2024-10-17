@@ -46,7 +46,7 @@ export class Repo<
   /**
    * Make sure you define all the fields of the table type, so they're saved in the database.
    */
-  protected setProjectionExpression(projectionExpression: (keyof T | `#${string & keyof T}`)[]) {
+  protected setProjectionExpression(projectionExpression: (keyof T)[]) {
     const expressionAttributeNames: Record<string, string> = {};
     projectionExpression.forEach((item) => {
       if (ddbReservedWords.includes(item as string)) {
