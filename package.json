@@ -1,6 +1,6 @@
 {
   "name": "dynamo-repo",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
   },
@@ -17,7 +17,8 @@
   },
   "keywords": [
     "dynamo",
-    "dynamodb"
+    "dynamodb",
+    "dynamo-repo"
   ],
   "author": "Guilherme De Mello E Silva",
   "license": "ISC",
