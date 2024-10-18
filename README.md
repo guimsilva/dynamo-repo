@@ -170,6 +170,8 @@ const users = await userRepo.searchItems(
 );
 ```
 
+### You can also delete an item, get all items at once or get items in batches with `deleteItem()`, `getAllItems()` and `batchGetItems()`
+
 ### Handling Reserved Words
 
 The library automatically handles DynamoDB reserved words, ensuring your operations are safe and compliant; no need to ever concatenate "#".
