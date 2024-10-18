@@ -154,7 +154,7 @@ export class Repo<
     }, {} as T);
   }
 
-  async findItem(key: Record<P | S, T[P] | T[S]>) {
+  async findItem(key: { [Q in P | S]: T[Q] }) {
     if (!key) return undefined;
 
     const params: GetCommandInput = {
@@ -240,7 +240,7 @@ export class Repo<
   /**
    * Must remove `dateUpdated` so it can be updated automatically, otherwise it will use the value provided.
    */
-  async updateItem(key: Record<P | S, T[P] | T[S]>, _item: Partial<T>) {
+  async updateItem(key: { [Q in P | S]: T[Q] }, _item: Partial<T>) {
     if (!key || !_item) return;
 
     console.log(`Updating ${this.tableName} ... `, JSON.stringify(key));
@@ -273,7 +273,7 @@ export class Repo<
   }
 
   async updateExpressionItem(
-    key: Record<P | S, T[P] | T[S]>,
+    key: { [Q in P | S]: T[Q] },
     updateExpression: string,
     additionalExpressionAttributeValues: Record<string, unknown>,
     _item: Partial<T>,
