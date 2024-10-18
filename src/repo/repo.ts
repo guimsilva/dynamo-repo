@@ -329,7 +329,7 @@ export class Repo<
     }
   }
 
-  async deleteItem(key: Partial<T>) {
+  async deleteItem(key: { [Q in P | S]: T[Q] }) {
     if (!key) return;
 
     console.log(`Deleting ${this.tableName} with key ${JSON.stringify(key)}...`);
@@ -363,7 +363,7 @@ export class Repo<
     }
   }
 
-  async batchGetItems(keys: Partial<T>[]) {
+  async batchGetItems(keys: { [Q in P | S]: T[Q] }[]) {
     if (!keys || !keys.length) return;
 
     console.log(`Batch getting ${this.tableName}...`);

@@ -22,7 +22,7 @@ export interface IRepo<
     item: Partial<T>,
     expressionAttributeNames?: Record<string, string>
   ): Promise<void>;
-  deleteItem(key: Partial<T>): Promise<void>;
+  deleteItem(key: { [Q in P | S]: T[Q] }): Promise<void>;
   getAllItems(): Promise<T[]>;
-  batchGetItems(keys: Partial<T>[]): Promise<T[]>;
+  batchGetItems(keys: { [Q in P | S]: T[Q] }[]): Promise<T[]>;
 }
