@@ -15,7 +15,7 @@ export class Repo<
 > implements IRepo<T, P, S>
 {
   constructor(
-    private ddbDocClient: DynamoDBDocument,
+    public ddbDocClient: DynamoDBDocument,
     private tableName: string,
     partitionKey: P,
     sortingKey?: S,
@@ -166,7 +166,9 @@ export class Repo<
     };
 
     try {
-      console.log(`Finding ${this.tableName} by key ${JSON.stringify(key)}... `);
+      if (this.config.logging) {
+        console.log(`Finding ${this.tableName} by key ${JSON.stringify(key)}... `);
+      }
       const data = await this.ddbDocClient.get(params);
       return data.Item as T;
     } catch (err: unknown) {
@@ -191,11 +193,13 @@ export class Repo<
     };
 
     try {
-      console.log(
-        `Searching ${this.tableName} by expressionAttributeValues ${JSON.stringify(
-          expressionAttributeValues
-        )}, keyConditionExpression ${keyConditionExpression} or indexName ${indexName}...`
-      );
+      if (this.config.logging) {
+        console.log(
+          `Searching ${this.tableName} by expressionAttributeValues ${JSON.stringify(
+            expressionAttributeValues
+          )}, keyConditionExpression ${keyConditionExpression} or indexName ${indexName}...`
+        );
+      }
       const data = await this.ddbDocClient.query(params);
       return data.Items as T[];
     } catch (err: unknown) {
@@ -215,7 +219,9 @@ export class Repo<
   async addItem(item: T) {
     if (!item) return;
 
-    console.log(`Adding ${this.tableName} with key ${this.getItemKeyValues(item)}... `);
+    if (this.config.logging) {
+      console.log(`Adding ${this.tableName} with key ${this.getItemKeyValues(item)}... `);
+    }
     const now = Date.now();
     const _item: T = {
       ...(this.upsertItemFn(item) as T),
@@ -229,7 +235,9 @@ export class Repo<
 
     try {
       await this.ddbDocClient.put(params);
-      console.log(`Adding ${this.tableName}... Done`);
+      if (this.config.logging) {
+        console.log(`Adding ${this.tableName}... Done`);
+      }
     } catch (err) {
       repoErrorHandler(
         err,
@@ -244,7 +252,9 @@ export class Repo<
   async updateItem(key: { [Q in P | S]: T[Q] }, _item: Partial<T>) {
     if (!key || !_item) return;
 
-    console.log(`Updating ${this.tableName} ... `, JSON.stringify(key));
+    if (this.config.logging) {
+      console.log(`Updating ${this.tableName} ... `, JSON.stringify(key));
+    }
     const item = this.upsertItemFn({ ...this.convertUndefinedToNull(_item) });
     if (this.config.confirmExistenceBeforeUpdate) {
       const existingItem = await this.findItem(key);
@@ -267,7 +277,9 @@ export class Repo<
 
     try {
       await this.ddbDocClient.update(params);
-      console.log(`Updating ${this.tableName}... Done`);
+      if (this.config.logging) {
+        console.log(`Updating ${this.tableName}... Done`);
+      }
     } catch (err) {
       repoErrorHandler(err, `Error updating ${this.tableName} with id ${JSON.stringify(key)}`);
     }
@@ -300,7 +312,9 @@ export class Repo<
         }
       });
     }
-    console.log(`Updating with expression ${this.tableName} ... `, JSON.stringify(key));
+    if (this.config.logging) {
+      console.log(`Updating with expression ${this.tableName} ... `, JSON.stringify(key));
+    }
     item.dateUpdated = item.dateUpdated ?? Date.now();
     const params: UpdateCommandInput = {
       TableName: this.tableName,
@@ -318,7 +332,9 @@ export class Repo<
 
     try {
       await this.ddbDocClient.update(params);
-      console.log(`Updating with expression ${this.tableName}... Done`);
+      if (this.config.logging) {
+        console.log(`Updating with expression ${this.tableName}... Done`);
+      }
     } catch (err) {
       repoErrorHandler(
         err,
@@ -332,7 +348,9 @@ export class Repo<
   async deleteItem(key: { [Q in P | S]: T[Q] }) {
     if (!key) return;
 
-    console.log(`Deleting ${this.tableName} with key ${JSON.stringify(key)}...`);
+    if (this.config.logging) {
+      console.log(`Deleting ${this.tableName} with key ${JSON.stringify(key)}...`);
+    }
     const params = {
       TableName: this.tableName,
       Key: key
@@ -340,14 +358,18 @@ export class Repo<
 
     try {
       await this.ddbDocClient.delete(params);
-      console.log(`Deleting ${this.tableName} with key ${JSON.stringify(key)}... Done`);
+      if (this.config.logging) {
+        console.log(`Deleting ${this.tableName} with key ${JSON.stringify(key)}... Done`);
+      }
     } catch (err) {
       repoErrorHandler(err, `Error deleting ${this.tableName} with key ${JSON.stringify(key)}`);
     }
   }
 
   async getAllItems() {
-    console.log(`Getting all ${this.tableName}...`);
+    if (this.config.logging) {
+      console.log(`Getting all ${this.tableName}...`);
+    }
     const params = {
       TableName: this.tableName,
       ProjectionExpression: this.projectionExpression,
@@ -356,7 +378,9 @@ export class Repo<
 
     try {
       const data = await this.ddbDocClient.scan(params);
-      console.log(`Getting all ${this.tableName}... Done`);
+      if (this.config.logging) {
+        console.log(`Getting all ${this.tableName}... Done`);
+      }
       return data.Items as T[];
     } catch (err) {
       repoErrorHandler(err, `Error getting all ${this.tableName}`);
@@ -364,9 +388,11 @@ export class Repo<
   }
 
   async batchGetItems(keys: { [Q in P | S]: T[Q] }[]) {
-    if (!keys || !keys.length) return;
+    if (!keys?.length) return;
 
-    console.log(`Batch getting ${this.tableName}...`);
+    if (this.config.logging) {
+      console.log(`Batch getting ${this.tableName}...`);
+    }
     const params = {
       RequestItems: {
         [this.tableName]: {
@@ -377,7 +403,9 @@ export class Repo<
 
     try {
       const data = await this.ddbDocClient.batchGet(params);
-      console.log(`Batch getting ${this.tableName}... Done`);
+      if (this.config.logging) {
+        console.log(`Batch getting ${this.tableName}... Done`);
+      }
       return data.Responses[this.tableName] as T[];
     } catch (err) {
       repoErrorHandler(err, `Error batch getting ${this.tableName}`);
