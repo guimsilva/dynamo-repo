@@ -6,13 +6,14 @@ import {
 } from "@aws-sdk/lib-dynamodb";
 import { repoErrorHandler } from "./repo.error.handler";
 import { ddbReservedWords } from "./ddb.reserved.words";
-import { DBItemBase } from "..";
+import { DBItemBase, IRepo } from "..";
 
 export class Repo<
   T extends DBItemBase,
   P extends string & keyof T,
   S extends (string & keyof T) | undefined = undefined
-> {
+> implements IRepo<T, P, S>
+{
   constructor(
     private ddbDocClient: DynamoDBDocument,
     private tableName: string,
