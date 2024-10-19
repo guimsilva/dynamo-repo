@@ -21,18 +21,22 @@ export interface User extends DBItemBase {
 
 export class UserRepo extends Repo<User, "id"> {
   constructor(ddbDocClient: DynamoDBDocument) {
-    super(ddbDocClient, "user", "id");
-    this.setProjectionExpression([
-      "id",
-      "firstName",
-      "surname",
-      "email",
-      "birthYear",
-      "birthMonth",
-      "country",
-      "role",
-      "birthYearMonth"
-    ]);
+    super(
+      ddbDocClient,
+      "user",
+      [
+        "id",
+        "firstName",
+        "surname",
+        "email",
+        "birthYear",
+        "birthMonth",
+        "country",
+        "role",
+        "birthYearMonth"
+      ],
+      "id"
+    );
   }
 
   override upsertItemFn = (item: Partial<User>) => {

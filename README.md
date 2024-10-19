@@ -31,7 +31,7 @@ All you need to do is to create a type to represent your table and a repo to han
 ```
 export class UserRepo extends Repo<TableType, "partitionKey", "optionalSortingKey"> {
   constructor(ddbDocClient: DynamoDBDocument) {
-    super(ddbDocClient, "tableName", "partitionKey", "optionalSortingKey");
+    super(ddbDocClient, "tableName", ["att1", "att2", "att3", ...], "partitionKey", "optionalSortingKey");
     ...
 ```
 
@@ -68,18 +68,22 @@ Overriding `upsertItemFn()` is optional.
 ```
 export class UserRepo extends Repo<User, "id"> {
   constructor(ddbDocClient: DynamoDBDocument) {
-    super(ddbDocClient, "user", "id");
-    this.setProjectionExpression([
-      "id",
-      "firstName",
-      "surname",
-      "email",
-      "birthYear",
-      "birthMonth",
-      "country",
-      "role",
-      "birthYearMonth"
-    ]);
+    super(
+      ddbDocClient,
+      "user",
+      [
+        "id",
+        "firstName",
+        "surname",
+        "email",
+        "birthYear",
+        "birthMonth",
+        "country",
+        "role",
+        "birthYearMonth"
+      ],
+      "id"
+    );
   }
 
   override upsertItemFn = (item: Partial<User>) => {
@@ -170,11 +174,13 @@ const users = await userRepo.searchItems(
 );
 ```
 
+### Both `findItem()` and `searchItems()` allow defining `projectionExpression` so it can return partial entities
+
 ### You can also delete an item, get all items at once or get items in batches with `deleteItem()`, `getAllItems()` and `batchGetItems()`
 
 ### Handling Reserved Words
 
-The library automatically handles DynamoDB reserved words, ensuring your operations are safe and compliant; no need to ever concatenate "#".
+The library automatically handles DynamoDB reserved words, ensuring your operations are safe and compliant; no need to ever concatenate "#", no need to avoid or modify them.
 
 ### Example Test Cases
 

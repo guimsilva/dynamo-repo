@@ -1,4 +1,5 @@
 import {
+  BatchGetCommandInput,
   DynamoDBDocument,
   GetCommandInput,
   QueryCommandInput,
@@ -7,6 +8,7 @@ import {
 import { repoErrorHandler } from "./repo.error.handler";
 import { ddbReservedWords } from "./ddb.reserved.words";
 import { DBItemBase, IRepo } from "..";
+import memoizee from "memoizee";
 
 export class Repo<
   T extends DBItemBase,
@@ -17,6 +19,7 @@ export class Repo<
   constructor(
     public ddbDocClient: DynamoDBDocument,
     private tableName: string,
+    projectionExpression: (keyof T)[],
     partitionKey: P,
     sortingKey?: S,
     private config = {
@@ -25,10 +28,11 @@ export class Repo<
     }
   ) {
     this.ddbDocClient = ddbDocClient;
-    this.key = [partitionKey, sortingKey];
+    this.key = sortingKey ? [partitionKey, sortingKey] : [partitionKey];
     this.dbItemBaseProjectionExpression = ["dateCreated", "dateUpdated"];
     /** In case this function is not set */
     this.upsertItemFn = (item) => item;
+    this.setProjectionExpression(projectionExpression);
   }
 
   projectionExpressionItems: (keyof T | `#${string & keyof T}`)[];
@@ -45,9 +49,25 @@ export class Repo<
   upsertItemFn?: (item: Partial<T>) => Partial<T>;
 
   /**
+   * This will make sure the projection expression is valid and correctly formatted.
+   */
+  private mapProjectionExpression = memoizee((projectionExpression: (keyof T)[]) =>
+    projectionExpression
+      .map((item: string & keyof T) =>
+        this.projectionExpressionItems.includes(item)
+          ? item
+          : this.projectionExpressionItems.includes(`#${item}`)
+            ? `#${item}`
+            : undefined
+      )
+      .filter((item) => !!item)
+      .join(", ")
+  );
+
+  /**
    * Make sure you define all the fields of the table type, so they're saved in the database.
    */
-  protected setProjectionExpression(projectionExpression: (keyof T)[]) {
+  private setProjectionExpression(projectionExpression: (keyof T)[]) {
     const expressionAttributeNames: Record<string, string> = {};
     projectionExpression.forEach((item) => {
       if (ddbReservedWords.includes(item as string)) {
@@ -55,30 +75,22 @@ export class Repo<
       }
     });
     if (Object.keys(expressionAttributeNames).length) {
-      this.setExpressionAttributeNames(expressionAttributeNames);
+      this.expressionAttributeNames = {
+        ...expressionAttributeNames
+      };
     }
-
     const projectionExpressionWithReservedWords: (keyof T | `#${string & keyof T}`)[] =
       projectionExpression.map((item) =>
         expressionAttributeNames[`#${item as string}`]
           ? (`#${item as string}` as `#${string & keyof T}`)
           : item
       );
-    this.projectionExpressionItems = [
+    const _projectionExpressionItems = [
       ...projectionExpressionWithReservedWords,
       ...this.dbItemBaseProjectionExpression
     ];
+    this.projectionExpressionItems = _projectionExpressionItems;
     this.projectionExpression = this.projectionExpressionItems.join(", ");
-  }
-
-  /**
-   * Optional to override the default expressionAttributeNames based on dynamodb reserved words
-   * @param expressionAttributeNames
-   */
-  protected setExpressionAttributeNames(expressionAttributeNames: Record<string, string>) {
-    this.expressionAttributeNames = {
-      ...expressionAttributeNames
-    };
   }
 
   protected getUpdateExpression(item: Partial<T>) {
@@ -136,7 +148,7 @@ export class Repo<
     return result;
   }
 
-  protected getItemKeyValues(item: T) {
+  protected getItemKeyValues(item: Partial<T>) {
     return JSON.stringify(
       this.key.reduce(
         (acc, currentKey) => {
@@ -155,13 +167,17 @@ export class Repo<
     }, {} as T);
   }
 
-  async findItem(key: { [Q in P | S]: T[Q] }) {
+  async findItem(key: { [Q in P | S]: T[Q] }, projectionExpression?: (keyof T)[]) {
     if (!key) return undefined;
+
+    const _projectionExpression = projectionExpression?.length
+      ? this.mapProjectionExpression(projectionExpression)
+      : this.projectionExpression;
 
     const params: GetCommandInput = {
       TableName: this.tableName,
       Key: key,
-      ProjectionExpression: this.projectionExpression,
+      ProjectionExpression: _projectionExpression,
       ExpressionAttributeNames: this.expressionAttributeNames
     };
 
@@ -170,7 +186,7 @@ export class Repo<
         console.log(`Finding ${this.tableName} by key ${JSON.stringify(key)}... `);
       }
       const data = await this.ddbDocClient.get(params);
-      return data.Item as T;
+      return data.Item as Partial<T> | undefined;
     } catch (err: unknown) {
       repoErrorHandler(err, `Error finding ${this.tableName} by key ${JSON.stringify(key)}`);
     }
@@ -180,15 +196,19 @@ export class Repo<
     keyConditionExpression: string,
     expressionAttributeValues: Partial<T>,
     indexName?: string,
-    projectionExpression?: string,
+    projectionExpression?: (keyof T)[],
     expressionAttributeNames: Record<string, string> = this.expressionAttributeNames
   ) {
+    const _projectionExpression = projectionExpression?.length
+      ? this.mapProjectionExpression(projectionExpression)
+      : this.projectionExpression;
+
     const params: QueryCommandInput = {
       TableName: this.tableName,
-      IndexName: indexName,
+      IndexName: indexName === null ? undefined : indexName,
       KeyConditionExpression: keyConditionExpression,
       ExpressionAttributeValues: this.getSearchExpressionAttributeValues(expressionAttributeValues),
-      ProjectionExpression: projectionExpression ?? this.projectionExpression,
+      ProjectionExpression: _projectionExpression,
       ExpressionAttributeNames: expressionAttributeNames
     };
 
@@ -201,7 +221,7 @@ export class Repo<
         );
       }
       const data = await this.ddbDocClient.query(params);
-      return data.Items as T[];
+      return data.Items as Partial<T>[] | undefined;
     } catch (err: unknown) {
       repoErrorHandler(
         err,
@@ -214,19 +234,18 @@ export class Repo<
 
   /**
    * If the item with same keys already exists, it will be replaced.
-   * Must remove `dateCreated` and `dateUpdated` so it can be updated correctly, otherwise it will keep the same values provided.
    */
-  async addItem(item: T) {
+  async addItem(item: Partial<T>, replaceTimestamps = true) {
     if (!item) return;
 
     if (this.config.logging) {
       console.log(`Adding ${this.tableName} with key ${this.getItemKeyValues(item)}... `);
     }
     const now = Date.now();
-    const _item: T = {
-      ...(this.upsertItemFn(item) as T),
-      dateCreated: item.dateCreated ?? now,
-      dateUpdated: item.dateUpdated ?? now
+    const _item: Partial<T> = {
+      ...(this.upsertItemFn(item) as Partial<T>),
+      dateCreated: replaceTimestamps ? now : (item.dateCreated ?? now),
+      dateUpdated: replaceTimestamps ? now : (item.dateUpdated ?? now)
     };
     const params = {
       TableName: this.tableName,
@@ -249,7 +268,7 @@ export class Repo<
   /**
    * Must remove `dateUpdated` so it can be updated automatically, otherwise it will use the value provided.
    */
-  async updateItem(key: { [Q in P | S]: T[Q] }, _item: Partial<T>) {
+  async updateItem(key: { [Q in P | S]: T[Q] }, _item: Partial<T>, replaceTimestamp = true) {
     if (!key || !_item) return;
 
     if (this.config.logging) {
@@ -264,7 +283,7 @@ export class Repo<
         );
       }
     }
-    item.dateUpdated = item.dateUpdated ?? Date.now();
+    item.dateUpdated = replaceTimestamp ? Date.now() : (item.dateUpdated ?? Date.now());
     const params: UpdateCommandInput = {
       TableName: this.tableName,
       Key: key,
@@ -290,7 +309,8 @@ export class Repo<
     updateExpression: string,
     additionalExpressionAttributeValues: Record<string, unknown>,
     _item: Partial<T>,
-    expressionAttributeNames: Record<string, string> = this.expressionAttributeNames
+    expressionAttributeNames: Record<string, string> = this.expressionAttributeNames,
+    replaceTimestamp = true
   ) {
     if (!updateExpression || !_item || !Object.keys(_item).length) return;
     const item = { ..._item };
@@ -315,7 +335,7 @@ export class Repo<
     if (this.config.logging) {
       console.log(`Updating with expression ${this.tableName} ... `, JSON.stringify(key));
     }
-    item.dateUpdated = item.dateUpdated ?? Date.now();
+    item.dateUpdated = replaceTimestamp ? Date.now() : (item.dateUpdated ?? Date.now());
     const params: UpdateCommandInput = {
       TableName: this.tableName,
       Key: key,
@@ -366,13 +386,17 @@ export class Repo<
     }
   }
 
-  async getAllItems() {
+  async getAllItems(projectionExpression?: (keyof T)[]) {
     if (this.config.logging) {
       console.log(`Getting all ${this.tableName}...`);
     }
+    const _projectionExpression = projectionExpression?.length
+      ? this.mapProjectionExpression(projectionExpression)
+      : this.projectionExpression;
+
     const params = {
       TableName: this.tableName,
-      ProjectionExpression: this.projectionExpression,
+      ProjectionExpression: _projectionExpression,
       ExpressionAttributeNames: this.expressionAttributeNames
     };
 
@@ -393,7 +417,7 @@ export class Repo<
     if (this.config.logging) {
       console.log(`Batch getting ${this.tableName}...`);
     }
-    const params = {
+    const params: BatchGetCommandInput = {
       RequestItems: {
         [this.tableName]: {
           Keys: keys
